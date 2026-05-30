@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 
 const STRIPE_PUBLISHABLE_KEY = "pk_live_51Tco3CFfuzArQ7hQsWZwJ5qfvrYjQWJQQS0SJCeUQGyJHOWIBfCDd9tNGWny5DFF72cpzO9O8elhao90c1wHF0YN00AT7F77RF";
 const STRIPE_PRICES = {
-  monthly: "price_1TcoW4CPuj6wgwTIj0hwRujP",
-  federal_pack: "price_1TcoWhCPuj6wgwTIvvv5OzCA",
-  coaching: "price_1TcoXzCPuj6wgwTIfYHNRSrY",
+  monthly: "price_1Tcuu0FfuzArQ7hQbsfMOIJg",
+  federal_pack: "price_1TcutvFfuzArQ7hQa8Bn6suA",
+  coaching: "price_1TcutvFfuzArQ7hQoYnNeM0Y",
 };
 
 const QUESTIONS = [
