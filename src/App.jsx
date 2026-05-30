@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-const STRIPE_PUBLISHABLE_KEY = "pk_test_51Tco3OCPuj6wgwTIP7EndbxsZJzoHjoHN8abjMp6C0GzH5d43S7VLnflBPSrTB13DLxxreoHeiabNUg86HIyV5Oq00CP80TzxQ";
+const STRIPE_PUBLISHABLE_KEY = "pk_live_51Tco3CFfuzArQ7hQsWZwJ5qfvrYjQWJQQS0SJCeUQGyJHOWIBfCDd9tNGWny5DFF72cpzO9O8elhao90c1wHF0YN00AT7F77RF";
 const STRIPE_PRICES = {
   monthly: "price_1TcoW4CPuj6wgwTIj0hwRujP",
   federal_pack: "price_1TcoWhCPuj6wgwTIvvv5OzCA",
