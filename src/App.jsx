@@ -26,11 +26,23 @@ const QUESTIONS = [
   { id:"M01", category:"Motivational", format:"Direct", competency:"Mission Alignment", difficulty:"Easy", tier:"free",
     agency:["CBP Officer","Border Patrol Agent","Import Specialist","Special Agent","Federal Police Officer"],
     text:"Why do you want to work for CBP, and what specifically draws you to this agency's mission?",
-    tip:"Connect your personal values to CBP's border security mission. Be specific about the role — avoid saying 'I've always wanted to be in law enforcement.'" },
+    tip:"Connect your personal values to CBP's border security mission. Be specific — avoid generic answers about wanting to serve." },
   { id:"M02", category:"Motivational", format:"Direct", competency:"Mission Alignment", difficulty:"Easy", tier:"free",
     agency:["Agriculture Specialist"],
-    text:"Why do you want to work as a USDA Agriculture Specialist, and how do you see your role in protecting the U.S. agricultural industry?",
-    tip:"Focus on USDA's regulatory mission — protecting plant and animal health, enforcing import regulations, and safeguarding U.S. agriculture from foreign pests and diseases." },
+    text:"Why do you want to work as a CBP Agriculture Specialist, and how do you see your role in protecting the U.S. from agricultural threats at our ports of entry?",
+    tip:"Focus on CBP's agricultural mission — intercepting prohibited items, enforcing import regulations, and preventing foreign pests from entering the U.S." },
+  { id:"M03", category:"Motivational", format:"Direct", competency:"Mission Alignment", difficulty:"Easy", tier:"free",
+    agency:["PPQ Officer"],
+    text:"Why do you want to work as a USDA PPQ Officer, and how would you contribute to protecting American agriculture from foreign pests and diseases?",
+    tip:"Focus on USDA APHIS's mission — safeguarding U.S. plant and animal resources. Reference your understanding of biological threats and regulatory enforcement." },
+  { id:"T03", category:"Technical", format:"Direct", competency:"Regulatory Knowledge", difficulty:"Medium", tier:"federal_pack",
+    agency:["PPQ Officer"],
+    text:"What is the role of USDA APHIS in regulating the importation of plants and plant products, and what authority does a PPQ Officer have at ports of entry?",
+    tip:"Reference the Plant Protection Act, 7 CFR Part 319, and APHIS's authority to inspect, detain, and order treatment or destruction of regulated articles." },
+  { id:"T04", category:"Technical", format:"Direct", competency:"Domain Knowledge", difficulty:"Hard", tier:"federal_pack",
+    agency:["PPQ Officer"],
+    text:"Walk me through how you would handle a shipment of cut flowers arriving from a country with known pest risks. What steps would you take?",
+    tip:"Walk through the inspection process — documentation review, physical inspection, pest identification, treatment options (fumigation, cold treatment), and reporting requirements." },
   { id:"T01", category:"Technical", format:"Direct", competency:"Domain Knowledge", difficulty:"Medium", tier:"federal_pack",
     text:"What are the primary agricultural pests or diseases you would screen for at the border?",
     tip:"Name specific pests, diseases, and the regulatory framework governing your decisions." },
@@ -342,18 +354,18 @@ export default function App() {
   const DIFFICULTY_ORDER = { Easy: 1, Medium: 2, Hard: 3 };
 
   const startMockInterview = () => {
-    // Filter accessible questions, respecting agency-specific ones
     const accessible = QUESTIONS.filter(q => {
       if (!canAccess(q.tier, user?.tier||"free")) return false;
-      if (q.agency) return q.agency.some(a => profile.role.includes(a) || a.includes(profile.role.split(" ")[0]));
+      // If question has agency tags, only include if it matches user's role
+      if (q.agency) return q.agency.includes(profile.role);
       return true;
     });
     if (accessible.length < 3) { initiateUpgrade("monthly"); return; }
 
-    // Shuffle randomly
+    // Shuffle randomly for variety every session
     const shuffled = [...accessible].sort(() => Math.random() - 0.5);
 
-    // Pick up to 6, sort by progressive difficulty
+    // Pick up to 6, sort by progressive difficulty Easy → Medium → Hard
     const picked = shuffled.slice(0, Math.min(6, shuffled.length));
     const sorted = picked.sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]);
 
@@ -651,7 +663,7 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
           <p style={{color:"#64748b",fontSize:13,margin:0}}>We personalize your question bank to your role</p>
         </div>
         <div style={{background:"#0a1628",border:"1px solid #1e3a5f",borderRadius:16,padding:28}}>
-          {[{label:"Target Role",key:"role",options:["Agriculture Specialist","CBP Officer","Border Patrol Agent","Import Specialist","Special Agent","Federal Police Officer"]},
+          {[{label:"Target Role",key:"role",options:["Agriculture Specialist","CBP Officer","Border Patrol Agent","Import Specialist","Special Agent","Federal Police Officer","PPQ Officer"]},
             {label:"Agency",key:"agency",options:["CBP / USDA","CBP Only","ICE / HSI","DEA","ATF","FBI","Secret Service","USMS"]}].map(f=>(
             <div key={f.key} style={{marginBottom:18}}>
               <label style={S.label}>{f.label}</label>
