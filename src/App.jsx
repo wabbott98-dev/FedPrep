@@ -24,8 +24,13 @@ const QUESTIONS = [
     text:"You discover a colleague is falsifying inspection records. What do you do?",
     tip:"Be direct. Federal panels expect you to report misconduct through proper channels without hesitation." },
   { id:"M01", category:"Motivational", format:"Direct", competency:"Mission Alignment", difficulty:"Easy", tier:"free",
-    text:"Why do you want to work for CBP/USDA?",
-    tip:"Connect your personal values to the agency mission. Avoid generic answers." },
+    agency:["CBP Officer","Border Patrol Agent","Import Specialist","Special Agent","Federal Police Officer"],
+    text:"Why do you want to work for CBP, and what specifically draws you to this agency's mission?",
+    tip:"Connect your personal values to CBP's border security mission. Be specific about the role — avoid saying 'I've always wanted to be in law enforcement.'" },
+  { id:"M02", category:"Motivational", format:"Direct", competency:"Mission Alignment", difficulty:"Easy", tier:"free",
+    agency:["Agriculture Specialist"],
+    text:"Why do you want to work as a USDA Agriculture Specialist, and how do you see your role in protecting the U.S. agricultural industry?",
+    tip:"Focus on USDA's regulatory mission — protecting plant and animal health, enforcing import regulations, and safeguarding U.S. agriculture from foreign pests and diseases." },
   { id:"T01", category:"Technical", format:"Direct", competency:"Domain Knowledge", difficulty:"Medium", tier:"federal_pack",
     text:"What are the primary agricultural pests or diseases you would screen for at the border?",
     tip:"Name specific pests, diseases, and the regulatory framework governing your decisions." },
@@ -337,14 +342,18 @@ export default function App() {
   const DIFFICULTY_ORDER = { Easy: 1, Medium: 2, Hard: 3 };
 
   const startMockInterview = () => {
-    // Get all accessible questions
-    const accessible = QUESTIONS.filter(q => canAccess(q.tier, user?.tier||"free"));
+    // Filter accessible questions, respecting agency-specific ones
+    const accessible = QUESTIONS.filter(q => {
+      if (!canAccess(q.tier, user?.tier||"free")) return false;
+      if (q.agency) return q.agency.some(a => profile.role.includes(a) || a.includes(profile.role.split(" ")[0]));
+      return true;
+    });
     if (accessible.length < 3) { initiateUpgrade("monthly"); return; }
 
-    // Shuffle accessible questions randomly
+    // Shuffle randomly
     const shuffled = [...accessible].sort(() => Math.random() - 0.5);
 
-    // Pick up to 6, then sort by progressive difficulty (Easy → Medium → Hard)
+    // Pick up to 6, sort by progressive difficulty
     const picked = shuffled.slice(0, Math.min(6, shuffled.length));
     const sorted = picked.sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]);
 
@@ -373,10 +382,15 @@ RULES: Flag missing STAR components, vague language, blame toward supervisors, "
 Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_alignment":0,"professionalism":0},"total":0,"strengths":[],"improvements":[],"suggested_answer":"","flags":[],"next_tip":""}`;
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "anthropic-dangerous-direct-browser-access":"true"
+        },
         body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,
           messages:[{role:"user",content:`QUESTION: ${selectedQ.text}\nCOMPETENCY: ${selectedQ.competency}\nFORMAT: ${selectedQ.format}\nRESPONSE: ${response}\n\nScore this and return JSON only.`}]})
       });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = await res.json();
       const raw = data.content.map(b=>b.text||"").join("");
       const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
@@ -396,7 +410,8 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
         setScreen("feedback");
       }
     } catch(e) {
-      setFeedback({error:true,message:"Evaluation failed. Please try again."});
+      console.error("Evaluation error:", e);
+      setFeedback({error:true, message:`Evaluation failed: ${e.message}. Please check your connection and try again.`});
       setScreen("feedback");
     }
     setLoading(false);
