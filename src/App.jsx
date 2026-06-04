@@ -393,20 +393,20 @@ SCORING (1-5 each): structure, relevance, specificity, competency_alignment, pro
 RULES: Flag missing STAR components, vague language, blame toward supervisors, "we did" without personal ownership.
 Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_alignment":0,"professionalism":0},"total":0,"strengths":[],"improvements":[],"suggested_answer":"","flags":[],"next_tip":""}`;
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "anthropic-dangerous-direct-browser-access":"true"
-        },
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,
-          messages:[{role:"user",content:`QUESTION: ${selectedQ.text}\nCOMPETENCY: ${selectedQ.competency}\nFORMAT: ${selectedQ.format}\nRESPONSE: ${response}\n\nScore this and return JSON only.`}]})
-      });
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      const data = await res.json();
-      const raw = data.content.map(b=>b.text||"").join("");
-      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
-      setFeedback(parsed);
+      const res = await fetch("/api/evaluate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    question: selectedQ.text,
+    competency: selectedQ.category,
+    format: selectedQ.format,
+    response: response
+  })
+});
+if (!res.ok) throw new Error(`API error: ${res.status}`);
+const data = await res.json();
+setFeedback(data);
+
       const newSession = { question:selectedQ, response, feedback:parsed, time:timer, date:new Date().toLocaleDateString() };
       setSessions(prev=>[...prev, newSession]);
       if (mockMode) {
