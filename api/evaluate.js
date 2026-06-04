@@ -7,6 +7,13 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    res.status(500).json({ error: "API key not configured. Please check Vercel environment variables." });
+    return;
+  }
+
   const { question, competency, format, response } = req.body;
 
   if (!question || !response) {
@@ -14,17 +21,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  const systemPrompt = `You are a federal law enforcement interview coach with 20+ years evaluating CBP, USDA, and Border Patrol oral board panels. Return ONLY valid JSON, no markdown, no preamble.
-SCORING (1-5 each): structure, relevance, specificity, competency_alignment, professionalism.
-RULES: Flag missing STAR components, vague language, blame toward supervisors, "we did" without personal ownership.
-Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_alignment":0,"professionalism":0},"total":0,"strengths":[],"improvements":[],"suggested_answer":"","flags":[],"next_tip":""}`;
+  const systemPrompt = `You are a federal law enforcement interview coach with 20+ years experience evaluating candidates for competitive federal positions. You evaluate responses using the STAR method (Situation, Task, Action, Result).
+
+SCORING (1-5 each): structure, relevance, specificity, competency_alignment, professionalism
+RULES: Flag missing STAR components, vague language, blame toward supervisors, "we did" without personal accountability.
+Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_alignment":0,"professionalism":0},"overall":0,"feedback":"","strengths":[""],"improvements":[""],"flagged_phrases":[""]}`;
 
   try {
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
@@ -33,14 +41,18 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
         system: systemPrompt,
         messages: [{
           role: "user",
-          content: `QUESTION: ${question}\nCOMPETENCY: ${competency}\nFORMAT: ${format}\nRESPONSE: ${response}\n\nScore this and return JSON only.`
+          content: `QUESTION: ${question}\nCOMPETENCY: ${competency}\nFORMAT: ${format}\nRESPONSE: ${response}`
         }]
       })
     });
 
     const data = await anthropicRes.json();
+
     if (!anthropicRes.ok) {
-      res.status(500).json({ error: `Anthropic error: ${data.error?.message || "Unknown"}` });
+      res.status(anthropicRes.status).json({ 
+        error: `Anthropic error: ${data.error?.message || "Unknown"}`,
+        status: anthropicRes.status
+      });
       return;
     }
 
