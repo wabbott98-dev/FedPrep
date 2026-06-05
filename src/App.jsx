@@ -408,10 +408,10 @@ if (!res.ok) throw new Error(`API error: ${res.status}`);
 const data = await res.json();
 setFeedback(data);
 
-      const newSession = { question:selectedQ, response, feedback:parsed, time:timer, date:new Date().toLocaleDateString() };
+      const newSession = { question:selectedQ, response, feedback:data, time:timer, date:new Date().toLocaleDateString() };
       setSessions(prev=>[...prev, newSession]);
       if (mockMode) {
-        const newResponses = [...mockResponses, { question:selectedQ, response, feedback:parsed }];
+        const newResponses = [...mockResponses, { question:selectedQ, response, feedback:data }];
         setMockResponses(newResponses);
         if (mockIndex < mockQuestions.length - 1) {
           setScreen("mockFeedback");
