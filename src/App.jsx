@@ -64,7 +64,6 @@ const QUESTIONS = [
     tip:"Show empathy but also accountability. Reference documentation and progressive steps." },
 ];
 
-// Mock interview question sets by role
 const MOCK_SETS = {
   "Agriculture Specialist": ["M01","B01","S01","I02","T01","B02"],
   "CBP Officer":            ["M01","B01","S01","I01","B03","S02"],
@@ -167,6 +166,9 @@ export default function App() {
   const [authForm, setAuthForm]         = useState({name:"",email:"",password:""});
   const [authError, setAuthError]       = useState("");
   const [profile, setProfile]           = useState({role:"Agriculture Specialist",agency:"CBP / USDA",level:"Experienced"});
+  const [profiles, setProfiles]         = useState([]);
+  const [activeProfileId, setActiveProfileId] = useState(null);
+  const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
   const [selectedQ, setSelectedQ]       = useState(null);
   const [response, setResponse]         = useState("");
   const [feedback, setFeedback]         = useState(null);
@@ -177,14 +179,11 @@ export default function App() {
   const [timerActive, setTimerActive]   = useState(false);
   const [upgradeTarget, setUpgradeTarget] = useState(null);
   const [stripeLoading, setStripeLoading] = useState(false);
-  // Voice input
   const [isRecording, setIsRecording]   = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const recognitionRef                  = useRef(null);
-  // Panel voice (text-to-speech)
   const [isSpeaking, setIsSpeaking]     = useState(false);
   const [panelVoiceEnabled, setPanelVoiceEnabled] = useState(true);
-  // Mock Interview
   const [mockMode, setMockMode]         = useState(false);
   const [mockQuestions, setMockQuestions] = useState([]);
   const [mockIndex, setMockIndex]       = useState(0);
@@ -202,12 +201,21 @@ export default function App() {
       if (ss) setSessions(JSON.parse(ss));
       const sp = localStorage.getItem("fedprep_profile");
       if (sp) setProfile(JSON.parse(sp));
+      const sps = localStorage.getItem("fedprep_profiles");
+      if (sps) {
+        const parsed = JSON.parse(sps);
+        setProfiles(parsed);
+        const active = localStorage.getItem("fedprep_active_profile");
+        if (active) {
+          setActiveProfileId(active);
+          const found = parsed.find(p => p.id === active);
+          if (found) setProfile(found);
+        }
+      }
     } catch(e) {}
-    // Check voice support
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       setVoiceSupported(true);
     }
-    // Handle Stripe redirect
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success") {
       const tier = params.get("tier");
@@ -223,19 +231,26 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => { if (sessions.length) localStorage.setItem("fedprep_sessions", JSON.stringify(sessions)); }, [sessions]);
+  useEffect(() => {
+    if (sessions.length) {
+      localStorage.setItem("fedprep_sessions", JSON.stringify(sessions));
+      if (activeProfileId) localStorage.setItem(`fedprep_sessions_${activeProfileId}`, JSON.stringify(sessions));
+    }
+  }, [sessions, activeProfileId]);
+
   useEffect(() => {
     if (timerActive) { timerRef.current = setInterval(() => setTimer(t=>t+1), 1000); }
     else { clearInterval(timerRef.current); }
     return () => clearInterval(timerRef.current);
   }, [timerActive]);
+
   useEffect(() => {
     if (mockTimerActive) { mockTimerRef.current = setInterval(() => setMockTimer(t=>t+1), 1000); }
     else { clearInterval(mockTimerRef.current); }
     return () => clearInterval(mockTimerRef.current);
   }, [mockTimerActive]);
 
-    // ── STRIPE CHECKOUT ──
+  // ── STRIPE CHECKOUT ──
   const handleStripeCheckout = async (tier) => {
     setStripeLoading(true);
     try {
@@ -258,7 +273,6 @@ export default function App() {
   };
 
   // ── AUTH ──
-
   const handleAuth = () => {
     setAuthError("");
     if (!authForm.email.includes("@")) { setAuthError("Please enter a valid email address."); return; }
@@ -281,7 +295,47 @@ export default function App() {
     setScreen("landing");
   };
 
-  const saveProfile = () => { localStorage.setItem("fedprep_profile",JSON.stringify(profile)); setScreen("dashboard"); };
+  const saveProfile = () => {
+    const id = activeProfileId || `p_${Date.now()}`;
+    const newProfile = { ...profile, id };
+    const existing = profiles.find(p => p.id === id);
+    const updated = existing
+      ? profiles.map(p => p.id === id ? newProfile : p)
+      : [...profiles, newProfile];
+    setProfiles(updated);
+    setActiveProfileId(id);
+    setProfile(newProfile);
+    localStorage.setItem("fedprep_profile", JSON.stringify(newProfile));
+    localStorage.setItem("fedprep_profiles", JSON.stringify(updated));
+    localStorage.setItem("fedprep_active_profile", id);
+    setScreen("dashboard");
+  };
+
+  const switchProfile = (p) => {
+    setProfile(p);
+    setActiveProfileId(p.id);
+    localStorage.setItem("fedprep_profile", JSON.stringify(p));
+    localStorage.setItem("fedprep_active_profile", p.id);
+    setShowProfileSwitcher(false);
+    setSessions([]);
+    const saved = localStorage.getItem(`fedprep_sessions_${p.id}`);
+    if (saved) setSessions(JSON.parse(saved));
+  };
+
+  const addNewProfile = () => {
+    setActiveProfileId(null);
+    setProfile({role:"Agriculture Specialist", agency:"CBP / USDA", level:"Experienced"});
+    setScreen("onboarding");
+  };
+
+  const deleteProfile = (id) => {
+    const updated = profiles.filter(p => p.id !== id);
+    setProfiles(updated);
+    localStorage.setItem("fedprep_profiles", JSON.stringify(updated));
+    if (activeProfileId === id && updated.length > 0) {
+      switchProfile(updated[0]);
+    }
+  };
 
   const initiateUpgrade = (tier) => { setUpgradeTarget(tier); setScreen("upgrade"); };
 
@@ -313,7 +367,7 @@ export default function App() {
     setIsRecording(false);
   };
 
-    // ── PANEL VOICE (ElevenLabs TTS) ──
+  // ── PANEL VOICE (ElevenLabs TTS) ──
   const speakQuestion = async (text) => {
     if (!panelVoiceEnabled) return;
     window.speechSynthesis?.cancel();
@@ -336,7 +390,6 @@ export default function App() {
     }
   };
 
-
   const stopSpeaking = () => {
     window.speechSynthesis?.cancel();
     setIsSpeaking(false);
@@ -350,25 +403,19 @@ export default function App() {
     setTimeout(() => speakQuestion(q.text), 500);
   };
 
-  // ── MOCK INTERVIEW — randomized + progressive difficulty ──
+  // ── MOCK INTERVIEW ──
   const DIFFICULTY_ORDER = { Easy: 1, Medium: 2, Hard: 3 };
 
   const startMockInterview = () => {
     const accessible = QUESTIONS.filter(q => {
       if (!canAccess(q.tier, user?.tier||"free")) return false;
-      // If question has agency tags, only include if it matches user's role
       if (q.agency) return q.agency.includes(profile.role);
       return true;
     });
     if (accessible.length < 3) { initiateUpgrade("monthly"); return; }
-
-    // Shuffle randomly for variety every session
     const shuffled = [...accessible].sort(() => Math.random() - 0.5);
-
-    // Pick up to 6, sort by progressive difficulty Easy → Medium → Hard
     const picked = shuffled.slice(0, Math.min(6, shuffled.length));
     const sorted = picked.sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]);
-
     setMockQuestions(sorted);
     setMockIndex(0);
     setMockResponses([]);
@@ -394,19 +441,18 @@ RULES: Flag missing STAR components, vague language, blame toward supervisors, "
 Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_alignment":0,"professionalism":0},"total":0,"strengths":[],"improvements":[],"suggested_answer":"","flags":[],"next_tip":""}`;
     try {
       const res = await fetch("/api/evaluate", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    question: selectedQ.text,
-    competency: selectedQ.category,
-    format: selectedQ.format,
-    response: response
-  })
-});
-if (!res.ok) throw new Error(`API error: ${res.status}`);
-const data = await res.json();
-setFeedback(data);
-
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: selectedQ.text,
+          competency: selectedQ.category,
+          format: selectedQ.format,
+          response: response
+        })
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = await res.json();
+      setFeedback(data);
       const newSession = { question:selectedQ, response, feedback:data, time:timer, date:new Date().toLocaleDateString() };
       setSessions(prev=>[...prev, newSession]);
       if (mockMode) {
@@ -689,7 +735,7 @@ setFeedback(data);
   );
 
   // ════════════════════════════════════════
-  // UPGRADE — WITH REAL STRIPE CHECKOUT
+  // UPGRADE
   // ════════════════════════════════════════
   if (screen==="upgrade") return (
     <div style={S.page}>
@@ -736,7 +782,11 @@ setFeedback(data);
       <div style={S.header}>
         <div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:"#4a9eff"}}>FED PREP</div>
-          <div style={{fontSize:11,color:"#64748b"}}>{profile.role} · {profile.agency}</div>
+          <button onClick={()=>setShowProfileSwitcher(v=>!v)}
+            style={{background:"none",border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+            <div style={{fontSize:11,color:"#64748b"}}>{profile.role} · {profile.agency}</div>
+            <span style={{fontSize:10,color:"#4a9eff"}}>▼</span>
+          </button>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <button onClick={()=>setScreen("upgrade")} style={{padding:"5px 12px",background:`${tierInfo.color}22`,border:`1px solid ${tierInfo.color}55`,borderRadius:20,color:tierInfo.color,fontSize:11,cursor:"pointer",fontWeight:600}}>{tierInfo.label} ↑</button>
@@ -744,12 +794,37 @@ setFeedback(data);
         </div>
       </div>
       <div style={{padding:20,maxWidth:640,margin:"0 auto"}}>
+
+        {/* Profile Switcher */}
+        {showProfileSwitcher && (
+          <div style={{background:"#0a1628",border:"1px solid #1e3a5f",borderRadius:14,padding:16,marginBottom:16}}>
+            <div style={{fontSize:11,letterSpacing:2,color:"#4a9eff",textTransform:"uppercase",marginBottom:12}}>Your Profiles</div>
+            {profiles.map(p=>(
+              <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",borderRadius:10,background:p.id===activeProfileId?"#1a3a5c":"#0f1f33",border:`1px solid ${p.id===activeProfileId?"#4a9eff":"#1e3a5f"}`,marginBottom:8,cursor:"pointer"}}
+                onClick={()=>switchProfile(p)}>
+                <div>
+                  <div style={{fontSize:13,color:p.id===activeProfileId?"#4a9eff":"#f1f5f9",fontWeight:600}}>{p.role}</div>
+                  <div style={{fontSize:11,color:"#475569"}}>{p.agency} · {p.level}</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  {p.id===activeProfileId && <span style={{fontSize:10,color:"#4a9eff"}}>Active</span>}
+                  {profiles.length>1 && <button onClick={e=>{e.stopPropagation();deleteProfile(p.id);}}
+                    style={{background:"none",border:"none",color:"#475569",cursor:"pointer",fontSize:16,padding:"0 4px"}}>×</button>}
+                </div>
+              </div>
+            ))}
+            <button onClick={addNewProfile}
+              style={{width:"100%",padding:"10px",background:"transparent",border:"1px dashed #1e3a5f",borderRadius:10,color:"#4a9eff",fontSize:12,cursor:"pointer",marginTop:4}}>
+              + Add New Profile
+            </button>
+          </div>
+        )}
+
         <div style={{marginBottom:18}}>
           <div style={{fontSize:13,color:"#64748b"}}>Welcome back,</div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:1}}>{user?.name}</div>
         </div>
 
-        {/* Stats */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:18}}>
           {[{label:"Sessions",value:sessions.length,color:"#4a9eff"},
             {label:"Avg Score",value:sessions.length?`${avgScore}/25`:"—",color:getScoreColor(avgScore)},
@@ -761,7 +836,6 @@ setFeedback(data);
           ))}
         </div>
 
-        {/* Mock Interview CTA */}
         <button onClick={startMockInterview}
           style={{width:"100%",marginBottom:14,padding:"16px",background:"linear-gradient(135deg,#1a2a3a,#1e3a5c)",border:"1px solid #06b6d444",borderRadius:14,color:"#f1f5f9",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{textAlign:"left"}}>
@@ -778,7 +852,6 @@ setFeedback(data);
           </button>
         )}
 
-        {/* Category filter */}
         <div style={{marginBottom:12}}>
           <div style={{...S.sectionLbl,marginBottom:10}}>Question Bank</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -788,7 +861,6 @@ setFeedback(data);
           </div>
         </div>
 
-        {/* Questions */}
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {filteredQs.map(q=>{
             const colors=CATEGORY_COLORS[q.category];
@@ -817,7 +889,7 @@ setFeedback(data);
   );
 
   // ════════════════════════════════════════
-  // PRACTICE — WITH VOICE INPUT
+  // PRACTICE
   // ════════════════════════════════════════
   if (screen==="practice") return (
     <div style={S.page}>
@@ -835,7 +907,6 @@ setFeedback(data);
         {mockMode && <div style={{fontSize:11,color:"#475569"}}>Total: {formatTime(mockTimer)}</div>}
       </div>
 
-      {/* Mock progress bar */}
       {mockMode && (
         <div style={{height:3,background:"#0f1f33"}}>
           <div style={{height:"100%",width:`${((mockIndex+1)/mockQuestions.length)*100}%`,background:"linear-gradient(90deg,#06b6d4,#4a9eff)",transition:"width 0.5s ease"}}/>
@@ -851,7 +922,6 @@ setFeedback(data);
           </div>
           <p style={{margin:"0 0 14px",fontSize:16,fontWeight:600,lineHeight:1.5}}>{selectedQ.text}</p>
 
-          {/* Panel voice controls */}
           <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:12}}>
             <button onClick={isSpeaking?stopSpeaking:()=>speakQuestion(selectedQ.text)}
               style={{padding:"6px 14px",borderRadius:20,border:`1px solid ${isSpeaking?"#06b6d4":"#1e3a5f"}`,background:isSpeaking?"#0a1a2a":"transparent",color:isSpeaking?"#06b6d4":"#475569",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
@@ -915,7 +985,7 @@ setFeedback(data);
   );
 
   // ════════════════════════════════════════
-  // MOCK FEEDBACK (between questions)
+  // MOCK FEEDBACK
   // ════════════════════════════════════════
   if (screen==="mockFeedback") return (
     <div style={S.page}>
@@ -934,7 +1004,6 @@ setFeedback(data);
           <div style={{fontSize:12,color:"#64748b"}}>out of 25</div>
           <span style={{fontSize:11,padding:"4px 12px",borderRadius:20,background:getRating(feedback?.total||0).color+"22",color:getRating(feedback?.total||0).color,fontWeight:700}}>{getRating(feedback?.total||0).label.toUpperCase()}</span>
         </div>
-
         {feedback?.strengths?.length>0 && (
           <div style={{background:"#0a1a0a",border:"1px solid #14532d",borderRadius:12,padding:14,marginBottom:12}}>
             <div style={{fontSize:11,color:"#22c55e",marginBottom:8,fontWeight:700}}>✅ Strong Points</div>
@@ -947,7 +1016,6 @@ setFeedback(data);
             {feedback.improvements.map((s,i)=><div key={i} style={{fontSize:12,color:"#fcd34d",marginBottom:3}}>• {s}</div>)}
           </div>
         )}
-
         <button onClick={nextMockQuestion}
           style={{...S.btnPrimary,background:"linear-gradient(135deg,#1a3a5c,#06b6d4)"}}>
           NEXT QUESTION ({mockIndex+2} of {mockQuestions.length}) →
@@ -957,7 +1025,7 @@ setFeedback(data);
   );
 
   // ════════════════════════════════════════
-  // MOCK REPORT (final)
+  // MOCK REPORT
   // ════════════════════════════════════════
   if (screen==="mockReport") return (
     <div style={S.page}>
@@ -967,7 +1035,6 @@ setFeedback(data);
         <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:"#06b6d4"}}>MOCK PANEL REPORT</div>
       </div>
       <div style={{padding:20,maxWidth:640,margin:"0 auto"}}>
-        {/* Hero Score */}
         <div style={{...S.card,textAlign:"center",background:"linear-gradient(135deg,#0a1628,#0a1a2a)",border:"1px solid #06b6d444"}}>
           <div style={{fontSize:11,letterSpacing:2,color:"#06b6d4",textTransform:"uppercase",marginBottom:8}}>Panel Simulation Complete</div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:72,color:getScoreColor(mockAvgScore),lineHeight:1,letterSpacing:2}}>{mockAvgScore}</div>
@@ -978,8 +1045,6 @@ setFeedback(data);
           <div style={{marginTop:16,fontSize:12,color:"#475569"}}>⏱ Total time: {formatTime(mockTimer)} · {mockResponses.length} questions</div>
           <div style={{marginTop:14}}><RadarChart scores={mockResponses.length?mockResponses[mockResponses.length-1].feedback?.scores:null}/></div>
         </div>
-
-        {/* Question breakdown */}
         <div style={{...S.sectionLbl,marginBottom:12}}>Question Breakdown</div>
         {mockResponses.map((r,i)=>(
           <div key={i} style={{background:"#0a1628",border:`1px solid ${CATEGORY_COLORS[r.question.category]?.accent||"#4a9eff"}33`,borderLeft:`3px solid ${CATEGORY_COLORS[r.question.category]?.accent||"#4a9eff"}`,borderRadius:12,padding:14,marginBottom:10}}>
@@ -998,8 +1063,6 @@ setFeedback(data);
             )}
           </div>
         ))}
-
-        {/* Panel verdict */}
         <div style={{background:"#0a1628",border:`1px solid ${getRating(mockAvgScore).color}44`,borderRadius:14,padding:20,marginBottom:20,textAlign:"center"}}>
           <div style={{fontSize:11,letterSpacing:2,color:getRating(mockAvgScore).color,textTransform:"uppercase",marginBottom:8}}>Panel Verdict</div>
           {mockAvgScore>=21 ? (
@@ -1010,7 +1073,6 @@ setFeedback(data);
             <p style={{margin:0,fontSize:13,color:"#94a3b8",lineHeight:1.7}}>💪 This is your baseline — and improvement from here is fast. Practice individual questions to strengthen weak competencies before your next full mock.</p>
           )}
         </div>
-
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           <button onClick={startMockInterview} style={S.btnGhost}>🔁 Retake Mock</button>
           <button onClick={()=>setScreen("dashboard")} style={{...S.btnPrimary,fontSize:14}}>Dashboard →</button>
@@ -1020,7 +1082,7 @@ setFeedback(data);
   );
 
   // ════════════════════════════════════════
-  // FEEDBACK (single question)
+  // FEEDBACK
   // ════════════════════════════════════════
   if (screen==="feedback") return (
     <div style={S.page}>
