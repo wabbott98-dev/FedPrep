@@ -235,37 +235,30 @@ export default function App() {
     return () => clearInterval(mockTimerRef.current);
   }, [mockTimerActive]);
 
-  // ── STRIPE CHECKOUT ──
+    // ── STRIPE CHECKOUT ──
   const handleStripeCheckout = async (tier) => {
     setStripeLoading(true);
     try {
-      const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
-      const successUrl = `${window.location.origin}/?payment=success&tier=${tier}`;
-      const cancelUrl = `${window.location.origin}/?payment=cancelled`;
-      await stripe.redirectToCheckout({
-        lineItems: [{ price: STRIPE_PRICES[tier], quantity: 1 }],
-        mode: tier === "federal_pack" ? "payment" : "subscription",
-        successUrl,
-        cancelUrl,
-        customerEmail: user?.email,
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tier,
+          priceId: STRIPE_PRICES[tier],
+          email: user?.email,
+        }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Checkout error");
+      window.location.href = data.url;
     } catch(e) {
-      alert("Payment setup error. Please try again.");
+      alert("Payment setup error: " + e.message);
     }
     setStripeLoading(false);
   };
 
-  const loadStripe = (key) => {
-    return new Promise((resolve) => {
-      if (window.Stripe) { resolve(window.Stripe(key)); return; }
-      const script = document.createElement("script");
-      script.src = "https://js.stripe.com/v3/";
-      script.onload = () => resolve(window.Stripe(key));
-      document.head.appendChild(script);
-    });
-  };
-
   // ── AUTH ──
+
   const handleAuth = () => {
     setAuthError("");
     if (!authForm.email.includes("@")) { setAuthError("Please enter a valid email address."); return; }
