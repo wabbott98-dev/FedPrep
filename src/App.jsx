@@ -313,23 +313,29 @@ export default function App() {
     setIsRecording(false);
   };
 
-  // ── PANEL VOICE (text-to-speech) ──
-  const speakQuestion = (text) => {
-    if (!panelVoiceEnabled || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.88;
-    utter.pitch = 0.95;
-    utter.volume = 1;
-    // Try to find a professional-sounding voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.name.includes("Daniel") || v.name.includes("Alex") || v.name.includes("Google US English") || v.lang === "en-US");
-    if (preferred) utter.voice = preferred;
-    utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => setIsSpeaking(false);
-    utter.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utter);
+    // ── PANEL VOICE (ElevenLabs TTS) ──
+  const speakQuestion = async (text) => {
+    if (!panelVoiceEnabled) return;
+    window.speechSynthesis?.cancel();
+    setIsSpeaking(true);
+    try {
+      const res = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error("Audio error");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
+      audio.onerror = () => setIsSpeaking(false);
+      audio.play();
+    } catch (e) {
+      setIsSpeaking(false);
+    }
   };
+
 
   const stopSpeaking = () => {
     window.speechSynthesis?.cancel();
