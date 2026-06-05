@@ -72,7 +72,7 @@ const MOCK_SETS = {
 };
 
 const TIERS = {
-  free:         { label:"Free",             color:"#64748b", questions:3,  price:"$0",   period:"",      features:["3 practice questions","Basic AI feedback","Score breakdown"] },
+  free:         { label:"Free",             color:"#64748b", questions:7,  price:"$0",   period:"",      features:["7 practice questions","Basic AI feedback","Score breakdown"] },
   monthly:      { label:"Monthly",          color:"#4a9eff", questions:8,  price:"$19",  period:"/mo",   features:["8 questions unlocked","Full AI coaching","Progress tracking","Panel flags & tips"] },
   federal_pack: { label:"Federal Pack",     color:"#f59e0b", questions:10, price:"$97",  period:" once", features:["10 questions + Technical bank","Agency-specific questions","Lifetime access","All Monthly features"] },
   coaching:     { label:"Coaching Premium", color:"#a855f7", questions:12, price:"$149", period:"/mo",   features:["All 12 questions","Leadership & supervisory prep","Priority AI feedback","All Federal Pack features"] },
