@@ -19,7 +19,8 @@ export default async function handler(req, res) {
       "payment_method_types[]": "card",
       "line_items[0][price]": priceId,
       "line_items[0][quantity]": "1",
-      "mode": tier === "federal" ? "payment" : "subscription",
+      "mode": tier === "federal_pack" ? "payment" : "subscription",
+
       "success_url": "https://fed-prep.vercel.app?session_id={CHECKOUT_SESSION_ID}&upgraded=true",
       "cancel_url": "https://fed-prep.vercel.app?upgrade=cancelled",
     });
