@@ -47,7 +47,7 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
       })
     });
 
-    const data = await anthropicRes.json();
+    
 
           if (!anthropicRes.ok) {
           const errText = await anthropicRes.text();
