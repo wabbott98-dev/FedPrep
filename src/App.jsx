@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react"; // v2
+
 
 const STRIPE_PUBLISHABLE_KEY = "pk_live_51Tco3CFfuzArQ7hQsWZwJ5qfvrYjQWJQQS0SJCeUQGyJHOWIBfCDd9tNGWny5DFF72cpzO9O8elhao90c1wHF0YN00AT7F77RF";
 const STRIPE_PRICES = {
