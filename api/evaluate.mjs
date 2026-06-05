@@ -49,18 +49,23 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
 
     const data = await anthropicRes.json();
 
-    if (!anthropicRes.ok) {
-      res.status(anthropicRes.status).json({ 
-        error: `Anthropic error: ${data.error?.message || "Unknown"}`,
-        status: anthropicRes.status
-      });
-      return;
-    }
+          if (!anthropicRes.ok) {
+          const errText = await anthropicRes.text();
+          console.error("Anthropic error:", anthropicRes.status, errText);
+          res.status(anthropicRes.status).json({ error: "Anthropic error: " + errText });
+          return;
+        }
 
-        const raw = data.content.map(b => b.text || "").join("");
+        const data = await anthropicRes.json();
+        console.log("Raw response:", JSON.stringify(data).substring(0, 500));
+
+
+                const raw = data.content.map(b => b.text || "").join("");
+        console.log("Raw text:", raw.substring(0, 300));
         const match = raw.match(/\{[\s\S]*\}/);
         if (!match) throw new Error("No JSON in response: " + raw.substring(0, 200));
         res.status(200).json(JSON.parse(match[0]));
+
 
 
 
