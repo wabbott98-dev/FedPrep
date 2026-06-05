@@ -10,14 +10,36 @@ export default async function handler(req, res) {
 
   const { tier, priceId, email } = req.body;
 
+  if (!priceId || !priceId.startsWith("price_")) {
+    res.status(400).json({ error: "Invalid price ID" }); return;
+  }
+
   try {
+    const params = new URLSearchParams({
+      "payment_method_types[]": "card",
+      "line_items[0][price]": priceId,
+      "line_items[0][quantity]": "1",
+      "mode": tier === "federal" ? "payment" : "subscription",
+      "success_url": "https://fed-prep.vercel.app?session_id={CHECKOUT_SESSION_ID}&upgraded=true",
+      "cancel_url": "https://fed-prep.vercel.app?upgrade=cancelled",
+    });
+
+    if (email) params.append("customer_email", email);
+
     const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        "payment_method_types[]": "card",
-        "line_items[0][price]": priceId,
-        "line_items[0][quantity]":
+      body: params,
+    });
+
+    const data = await stripeRes.json();
+    if (!stripeRes.ok) { res.status(500).json({ error: data.error?.message || "Stripe error" }); return; }
+
+    res.status(200).json({ url: data.url });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+}
