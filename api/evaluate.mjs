@@ -60,9 +60,8 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
         const raw = data.content.map(b => b.text || "").join("");
         const match = raw.match(/\{[\s\S]*\}/);
         if (!match) throw new Error("No JSON in response: " + raw.substring(0, 200));
-        const parsed = JSON.parse(match[0]);
+        res.status(200).json(JSON.parse(match[0]));
 
-        res.status(200).json(parsed);
 
 
 
