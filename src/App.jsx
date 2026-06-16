@@ -275,6 +275,7 @@ export default function App() {
   const [profiles, setProfiles]         = useState([]);
   const [activeProfileId, setActiveProfileId] = useState(null);
   const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
   const [selectedQ, setSelectedQ]       = useState(null);
   const [response, setResponse]         = useState("");
   const [feedback, setFeedback]         = useState(null);
@@ -958,6 +959,12 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
           </button>
         )}
 
+        {/* Progress & Resources */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <button onClick={()=>setScreen("progress")} style={{...S.btnGhost,marginTop:0,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>📈 Progress</button>
+          <button onClick={()=>setScreen("resources")} style={{...S.btnGhost,marginTop:0,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>📚 Resources</button>
+        </div>
+
         <div style={{marginBottom:12}}>
           <div style={{...S.sectionLbl,marginBottom:10}}>Question Bank</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -989,8 +996,7 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
             );
           })}
         </div>
-        {sessions.length>0 && <button onClick={()=>setScreen("progress")} style={{...S.btnGhost,marginTop:18}}>View Progress Report →</button>}
-        <button onClick={()=>setScreen("resources")} style={{...S.btnGhost,marginTop:10}}>📚 USAJobs & Federal Career Resources →</button>
+
       </div>
     </div>
   );
@@ -1279,7 +1285,8 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
         </div>
         <div style={S.sectionLbl}>Session History</div>
         {sessions.map((s,i)=>(
-          <div key={i} style={{background:"#0a1628",border:"1px solid #1e3a5f",borderLeft:`3px solid ${CATEGORY_COLORS[s.question.category]?.accent||"#4a9eff"}`,borderRadius:12,padding:14,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div key={i} onClick={()=>{setSelectedSession(s);setScreen("sessionDetail");}}
+            style={{background:"#0a1628",border:"1px solid #1e3a5f",borderLeft:`3px solid ${CATEGORY_COLORS[s.question.category]?.accent||"#4a9eff"}`,borderRadius:12,padding:14,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
             <div>
               <div style={{fontSize:13,fontWeight:600,marginBottom:2}}>{s.question.category} — {s.question.id}</div>
               <div style={{fontSize:11,color:"#475569",marginBottom:2}}>{s.date} · {formatTime(s.time)}</div>
@@ -1288,6 +1295,7 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
             <div style={{textAlign:"right"}}>
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:getScoreColor(s.feedback?.total||0),letterSpacing:1}}>{s.feedback?.total||0}/25</div>
               <div style={{fontSize:10,color:getRating(s.feedback?.total||0).color}}>{getRating(s.feedback?.total||0).label}</div>
+              <div style={{fontSize:10,color:"#4a9eff",marginTop:2}}>Tap to review →</div>
             </div>
           </div>
         ))}
@@ -1295,6 +1303,101 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
     </div>
   );
 
+
+
+  // ════════════════════════════════════════
+  // SESSION DETAIL
+  // ════════════════════════════════════════
+  if (screen==="sessionDetail" && selectedSession) return (
+    <div style={S.page}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+      <div style={S.header}>
+        <button onClick={()=>setScreen("progress")} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:13}}>← Progress</button>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:"#4a9eff"}}>SESSION REVIEW</div>
+        <div style={{fontSize:11,color:"#64748b"}}>{selectedSession.date}</div>
+      </div>
+      <div style={{padding:20,maxWidth:640,margin:"0 auto"}}>
+
+        {/* Score Hero */}
+        <div style={{...S.card,textAlign:"center"}}>
+          <div style={{fontSize:11,color:"#64748b",marginBottom:4}}>{selectedSession.question.category} — {selectedSession.question.id}</div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:64,color:getScoreColor(selectedSession.feedback?.total||0),lineHeight:1,letterSpacing:2}}>{selectedSession.feedback?.total||0}</div>
+          <div style={{fontSize:14,color:"#64748b",marginBottom:8}}>out of 25</div>
+          <span style={{fontSize:12,padding:"5px 14px",borderRadius:20,background:getRating(selectedSession.feedback?.total||0).color+"22",color:getRating(selectedSession.feedback?.total||0).color,fontWeight:700,letterSpacing:1}}>{getRating(selectedSession.feedback?.total||0).label.toUpperCase()}</span>
+          <div style={{marginTop:14}}><RadarChart scores={selectedSession.feedback?.scores}/></div>
+        </div>
+
+        {/* Original Question */}
+        <div style={{background:"#0a1628",border:`1px solid ${CATEGORY_COLORS[selectedSession.question.category]?.accent||"#4a9eff"}44`,borderLeft:`4px solid ${CATEGORY_COLORS[selectedSession.question.category]?.accent||"#4a9eff"}`,borderRadius:12,padding:16,marginBottom:14}}>
+          <div style={{fontSize:11,letterSpacing:1,color:CATEGORY_COLORS[selectedSession.question.category]?.accent||"#4a9eff",textTransform:"uppercase",marginBottom:8}}>📋 Question Asked</div>
+          <p style={{margin:0,fontSize:14,fontWeight:600,color:"#f1f5f9",lineHeight:1.5}}>{selectedSession.question.text}</p>
+          <div style={{marginTop:8,fontSize:11,color:"#475569"}}>Competency: {selectedSession.question.competency} · {selectedSession.question.format} · ⏱ {formatTime(selectedSession.time)}</div>
+        </div>
+
+        {/* Your Answer */}
+        <div style={{background:"#0a1628",border:"1px solid #1e3a5f",borderRadius:12,padding:16,marginBottom:14}}>
+          <div style={{fontSize:11,letterSpacing:1,color:"#64748b",textTransform:"uppercase",marginBottom:8}}>🎤 Your Answer</div>
+          <p style={{margin:0,fontSize:13,color:"#94a3b8",lineHeight:1.7}}>{selectedSession.response}</p>
+          <div style={{marginTop:8,fontSize:11,color:"#475569"}}>{selectedSession.response.split(/\s+/).filter(Boolean).length} words</div>
+        </div>
+
+        {/* Score Breakdown */}
+        <div style={S.card}>
+          <div style={S.sectionLbl}>Score Breakdown</div>
+          {selectedSession.feedback?.scores && Object.entries(selectedSession.feedback.scores).map(([dim,val])=>(
+            <ScoreBar key={dim} label={dim.replace(/_/g," ").replace(/\w/g,l=>l.toUpperCase())} value={val} color={getScoreColor(val,5)}/>
+          ))}
+        </div>
+
+        {/* Panel Flags */}
+        {selectedSession.feedback?.flags?.length>0 && (
+          <div style={{background:"#1a0a0a",border:"1px solid #7f1d1d",borderRadius:12,padding:16,marginBottom:14}}>
+            <div style={{...S.sectionLbl,color:"#ef4444"}}>⚠️ Panel Flags</div>
+            {selectedSession.feedback.flags.map((f,i)=><div key={i} style={{fontSize:12,color:"#fca5a5",marginBottom:4}}>• {f}</div>)}
+          </div>
+        )}
+
+        {/* Strengths */}
+        {selectedSession.feedback?.strengths?.length>0 && (
+          <div style={{background:"#0a1a0a",border:"1px solid #14532d",borderRadius:12,padding:16,marginBottom:14}}>
+            <div style={{...S.sectionLbl,color:"#22c55e"}}>✅ What You Did Well</div>
+            {selectedSession.feedback.strengths.map((s,i)=><div key={i} style={{fontSize:12,color:"#86efac",marginBottom:4}}>• {s}</div>)}
+          </div>
+        )}
+
+        {/* Improvements */}
+        {selectedSession.feedback?.improvements?.length>0 && (
+          <div style={{background:"#1a150a",border:"1px solid #78350f",borderRadius:12,padding:16,marginBottom:14}}>
+            <div style={{...S.sectionLbl,color:"#f59e0b"}}>⚠️ What To Improve</div>
+            {selectedSession.feedback.improvements.map((s,i)=><div key={i} style={{fontSize:12,color:"#fcd34d",marginBottom:4}}>• {s}</div>)}
+          </div>
+        )}
+
+        {/* Suggested Answer */}
+        {selectedSession.feedback?.suggested_answer && (
+          <div style={{...S.card,marginBottom:14}}>
+            <div style={S.sectionLbl}>💬 Stronger Answer Example</div>
+            <p style={{margin:0,fontSize:12,color:"#94a3b8",lineHeight:1.7}}>{selectedSession.feedback.suggested_answer}</p>
+          </div>
+        )}
+
+        {/* Next Tip */}
+        {selectedSession.feedback?.next_tip && (
+          <div style={{background:"#0a1628",border:"1px solid #2d1a4a",borderRadius:12,padding:14,marginBottom:18}}>
+            <div style={{...S.sectionLbl,color:"#a855f7"}}>🎯 Coach's Next Step</div>
+            <p style={{margin:0,fontSize:12,color:"#c4b5fd"}}>{selectedSession.feedback.next_tip}</p>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+          <button onClick={()=>startPractice(selectedSession.question)} style={S.btnGhost}>🔁 Retake Question</button>
+          <button onClick={()=>setScreen("progress")} style={{padding:"13px",background:"linear-gradient(135deg,#1a5c9e,#4a9eff)",border:"none",borderRadius:10,color:"#fff",fontSize:13,cursor:"pointer",fontWeight:600}}>← Back to Progress</button>
+        </div>
+
+      </div>
+    </div>
+  );
 
   // ════════════════════════════════════════
   // RESOURCES
