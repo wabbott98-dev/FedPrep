@@ -990,6 +990,7 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
           })}
         </div>
         {sessions.length>0 && <button onClick={()=>setScreen("progress")} style={{...S.btnGhost,marginTop:18}}>View Progress Report →</button>}
+        <button onClick={()=>setScreen("resources")} style={{...S.btnGhost,marginTop:10}}>📚 USAJobs & Federal Career Resources →</button>
       </div>
     </div>
   );
@@ -1290,6 +1291,113 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+
+
+  // ════════════════════════════════════════
+  // RESOURCES
+  // ════════════════════════════════════════
+  if (screen==="resources") return (
+    <div style={S.page}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+      <div style={S.header}>
+        <button onClick={()=>setScreen("dashboard")} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:13}}>← Dashboard</button>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:"#4a9eff"}}>RESOURCES</div>
+        <div style={{width:60}}/>
+      </div>
+      <div style={{padding:20,maxWidth:640,margin:"0 auto"}}>
+
+        <p style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.6}}>Everything you need to go from finding a federal job to acing the interview. Curated from official sources and insider experience.</p>
+
+        {/* USAJobs Section */}
+        <div style={{fontSize:11,letterSpacing:2,color:"#4a9eff",textTransform:"uppercase",marginBottom:12}}>🏛️ USAJobs — Getting Started</div>
+
+        {[
+          { title:"Create a USAJobs Account", desc:"Set up your login.gov account and USAJOBS profile — required before you can apply to any federal job.", url:"https://help.usajobs.gov/how-to/account", tag:"Step 1" },
+          { title:"Build Your Federal Resume", desc:"Federal resumes are different from private sector — longer, more detailed, and keyword-specific. Learn what to include.", url:"https://help.usajobs.gov/faq/application/documents", tag:"Step 2" },
+          { title:"How to Search for Jobs", desc:"Use filters like agency, location, series, and grade to find the right announcement for your background.", url:"https://help.usajobs.gov/how-to/search", tag:"Step 3" },
+          { title:"Understanding Job Announcements", desc:"Learn how to read an announcement — who may apply, qualifications, and what the hiring agency is actually looking for.", url:"https://help.usajobs.gov/how-to/job-announcement", tag:"Step 4" },
+          { title:"How to Apply Step by Step", desc:"Walk through the 5-step USAJOBS application process — resume, documents, review, personal info, and agency submission.", url:"https://help.usajobs.gov/how-to/application", tag:"Step 5" },
+          { title:"Check Your Application Status", desc:"Track where your application stands — received, reviewed, referred, selected, or not selected.", url:"https://help.usajobs.gov/how-to/application/status", tag:"Step 6" },
+        ].map((r,i)=>(
+          <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
+            <div style={{background:"#0a1628",border:"1px solid #1e3a5f",borderRadius:12,padding:16,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                  <span style={{fontSize:10,padding:"2px 8px",borderRadius:20,background:"#1a3a5c",color:"#4a9eff",fontWeight:700}}>{r.tag}</span>
+                </div>
+                <div style={{fontSize:13,fontWeight:700,color:"#f1f5f9",marginBottom:4}}>{r.title}</div>
+                <div style={{fontSize:12,color:"#64748b",lineHeight:1.5}}>{r.desc}</div>
+              </div>
+              <span style={{color:"#4a9eff",fontSize:16,flexShrink:0}}>→</span>
+            </div>
+          </a>
+        ))}
+
+        {/* Hiring Paths Section */}
+        <div style={{fontSize:11,letterSpacing:2,color:"#22c55e",textTransform:"uppercase",marginBottom:12,marginTop:24}}>🛣️ Federal Hiring Paths</div>
+
+        {[
+          { title:"Veterans' Preference", desc:"If you've served in the military, you may be eligible for hiring preference. Learn how to claim it.", url:"https://help.usajobs.gov/working-in-government/unique-hiring-paths/veterans", color:"#22c55e" },
+          { title:"Current Federal Employees", desc:"Internal candidates and status employees have access to competitive and non-competitive appointments.", url:"https://help.usajobs.gov/working-in-government/unique-hiring-paths/federal-employees", color:"#22c55e" },
+          { title:"Recent Graduates", desc:"The Pathways Program offers opportunities for students and recent graduates to enter federal service.", url:"https://help.usajobs.gov/working-in-government/unique-hiring-paths/students", color:"#22c55e" },
+          { title:"All Hiring Paths", desc:"See every hiring path — disability, military spouse, Native American, Peace Corps, and more.", url:"https://help.usajobs.gov/working-in-government/unique-hiring-paths", color:"#22c55e" },
+        ].map((r,i)=>(
+          <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
+            <div style={{background:"#0a1628",border:"1px solid #1e3a5f",borderLeft:`3px solid ${r.color}`,borderRadius:12,padding:16,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#f1f5f9",marginBottom:4}}>{r.title}</div>
+                <div style={{fontSize:12,color:"#64748b",lineHeight:1.5}}>{r.desc}</div>
+              </div>
+              <span style={{color:r.color,fontSize:16,flexShrink:0}}>→</span>
+            </div>
+          </a>
+        ))}
+
+        {/* CBP Specific Section */}
+        <div style={{fontSize:11,letterSpacing:2,color:"#f59e0b",textTransform:"uppercase",marginBottom:12,marginTop:24}}>⚡ CBP & DHS Specific</div>
+
+        {[
+          { title:"CBP Careers", desc:"Official CBP careers page — current openings, benefits, and what it means to serve at the border.", url:"https://www.cbp.gov/careers", color:"#f59e0b" },
+          { title:"CBP Officer Application", desc:"Learn about the CBP Officer position, requirements, and how the hiring process works.", url:"https://www.cbp.gov/careers/cbpo", color:"#f59e0b" },
+          { title:"Border Patrol Agent Application", desc:"Information on becoming a Border Patrol Agent — requirements, physical fitness test, and polygraph.", url:"https://www.cbp.gov/careers/bpa", color:"#f59e0b" },
+          { title:"DHS Careers", desc:"Explore all Department of Homeland Security career opportunities across CBP, ICE, TSA, FEMA and more.", url:"https://www.dhs.gov/homeland-security-careers", color:"#f59e0b" },
+        ].map((r,i)=>(
+          <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
+            <div style={{background:"#0a1628",border:"1px solid #1e3a5f",borderLeft:`3px solid ${r.color}`,borderRadius:12,padding:16,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#f1f5f9",marginBottom:4}}>{r.title}</div>
+                <div style={{fontSize:12,color:"#64748b",lineHeight:1.5}}>{r.desc}</div>
+              </div>
+              <span style={{color:r.color,fontSize:16,flexShrink:0}}>→</span>
+            </div>
+          </a>
+        ))}
+
+        {/* Insider Tips Section */}
+        <div style={{fontSize:11,letterSpacing:2,color:"#a855f7",textTransform:"uppercase",marginBottom:12,marginTop:24}}>🎖️ Insider Tips from FedPrep</div>
+
+        {[
+          { tip:"Your federal resume should be 3–5 pages", detail:"Unlike private sector, federal resumes are detailed. Include every duty, accomplishment, and hour per week for each position." },
+          { tip:"Keywords matter more than you think", detail:"HR specialists use automated systems to screen resumes. Mirror the exact language from the job announcement in your resume." },
+          { tip:"'Referred' means you made the cert list", detail:"If your status shows 'Referred,' your resume was sent to the hiring manager. That's a win — now prepare for the interview." },
+          { tip:"The oral board is a separate process", detail:"Getting referred doesn't mean you're done. Most federal law enforcement positions require a structured oral board interview — that's where FedPrep comes in." },
+          { tip:"Apply broadly, filter later", detail:"Federal hiring is slow. Apply to multiple announcements simultaneously and track them in your USAJobs dashboard." },
+        ].map((r,i)=>(
+          <div key={i} style={{background:"#0a1628",border:"1px solid #2d1a4a",borderLeft:"3px solid #a855f7",borderRadius:12,padding:16,marginBottom:10}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#f1f5f9",marginBottom:4}}>💡 {r.tip}</div>
+            <div style={{fontSize:12,color:"#64748b",lineHeight:1.5}}>{r.detail}</div>
+          </div>
+        ))}
+
+        <div style={{background:"linear-gradient(135deg,#0a1628,#0f1f33)",border:"1px solid #1e3a5f",borderRadius:14,padding:20,marginTop:24,textAlign:"center"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#f1f5f9",marginBottom:6}}>Ready to prep for your interview?</div>
+          <p style={{fontSize:12,color:"#64748b",margin:"0 0 14px"}}>You've found the job. Now let's make sure you ace the panel.</p>
+          <button onClick={()=>setScreen("dashboard")} style={{padding:"12px 28px",background:"linear-gradient(135deg,#1a5c9e,#4a9eff)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"'Bebas Neue',sans-serif",letterSpacing:1}}>START PRACTICING →</button>
+        </div>
+
       </div>
     </div>
   );
