@@ -1463,10 +1463,10 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
         <div style={{fontSize:11,letterSpacing:2,color:"#f59e0b",textTransform:"uppercase",marginBottom:12,marginTop:24}}>⚡ CBP & DHS Specific</div>
 
         {[
-          { title:"CBP Careers", desc:"Official CBP careers page — current openings, benefits, and what it means to serve at the border.", url:"https://www.cbp.gov/careers", color:"#f59e0b" },
-          { title:"CBP Officer Application", desc:"Learn about the CBP Officer position, requirements, and how the hiring process works.", url:"https://www.cbp.gov/careers/cbpo", color:"#f59e0b" },
-          { title:"Border Patrol Agent Application", desc:"Information on becoming a Border Patrol Agent — requirements, physical fitness test, and polygraph.", url:"https://www.cbp.gov/careers/bpa", color:"#f59e0b" },
-          { title:"DHS Careers", desc:"Explore all Department of Homeland Security career opportunities across CBP, ICE, TSA, FEMA and more.", url:"https://www.dhs.gov/homeland-security-careers", color:"#f59e0b" },
+          { title:"CBP Careers", desc:"Official CBP careers page — current openings, benefits, and what it means to serve at the border.", url:"https://careers.cbp.gov/s/", color:"#f59e0b" },
+          { title:"CBP Officer Application", desc:"Learn about the CBP Officer position, requirements, and how the hiring process works.", url:"https://careers.cbp.gov/s/career-paths/ofo", color:"#f59e0b" },
+          { title:"Border Patrol Agent Application", desc:"Information on becoming a Border Patrol Agent — requirements, physical fitness test, and polygraph.", url:"https://careers.cbp.gov/s/career-paths/usbp/bpa", color:"#f59e0b" },
+          { title:"DHS Careers", desc:"Explore all Department of Homeland Security career opportunities across CBP, ICE, TSA, FEMA and more.", url:"https://www.dhs.gov/topic/careers", color:"#f59e0b" },
         ].map((r,i)=>(
           <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
             <div style={{background:"#0a1628",border:"1px solid #1e3a5f",borderLeft:`3px solid ${r.color}`,borderRadius:12,padding:16,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
