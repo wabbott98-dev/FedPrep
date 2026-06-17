@@ -1483,7 +1483,7 @@ Return ONLY: {"scores":{"structure":0,"relevance":0,"specificity":0,"competency_
         <div style={{fontSize:11,letterSpacing:2,color:"#a855f7",textTransform:"uppercase",marginBottom:12,marginTop:24}}>🎖️ Insider Tips from FedPrep</div>
 
         {[
-          { tip:"Your federal resume should be 3–5 pages", detail:"Unlike private sector, federal resumes are detailed. Include every duty, accomplishment, and hour per week for each position." },
+          { tip:"Your federal resume is now limited to 2 pages", detail:"USAJobs updated its resume policy — federal resumes are now capped at 2 pages. Be concise but specific. Prioritize duties, accomplishments, and hours per week that directly match the job announcement." },
           { tip:"Keywords matter more than you think", detail:"HR specialists use automated systems to screen resumes. Mirror the exact language from the job announcement in your resume." },
           { tip:"'Referred' means you made the cert list", detail:"If your status shows 'Referred,' your resume was sent to the hiring manager. That's a win — now prepare for the interview." },
           { tip:"The oral board is a separate process", detail:"Getting referred doesn't mean you're done. Most federal law enforcement positions require a structured oral board interview — that's where FedPrep comes in." },
